@@ -13,12 +13,12 @@
 #include <pty.h>
 #include <poll.h>
 
-int do_exit = 0;
+int do_terminate = 0;
 
 void
-sig_handler(int sig)
+sig_terminate(int sig)
 {
-  do_exit = 1;
+  do_terminate = 1;
 }
 
 void wait_for_empty_fd(int fd)
@@ -37,7 +37,7 @@ main(int argc, char ** argv)
 
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = 0;
-  sa.sa_handler = sig_handler;
+  sa.sa_handler = sig_terminate;
   sigaction(SIGINT, &sa, NULL);
   sigaction(SIGCHLD, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
@@ -113,7 +113,7 @@ main(int argc, char ** argv)
 
     /* } while (read_cnt > 0 && errno != EAGAIN && errno != EWOULDBLOCK); */
 
-    while (! do_exit) {
+    while (! do_terminate) {
 
       int ns = poll(fds, 2, -1);
 
