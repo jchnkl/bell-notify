@@ -13,15 +13,19 @@
 #include <pty.h>
 #include <poll.h>
 
+int do_resize = 0;
 int do_terminate = 0;
+
+void
+sig_resize(int sig)
+{
+  do_resize = 1;
+}
 
 void
 sig_terminate(int sig)
 {
   do_terminate = 1;
-}
-
-{
 }
 
 int
@@ -31,6 +35,10 @@ main(int argc, char ** argv)
 
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = 0;
+
+  sa.sa_handler = sig_resize;
+  sigaction(SIGWINCH, &sa, NULL);
+
   sa.sa_handler = sig_terminate;
   sigaction(SIGINT, &sa, NULL);
   sigaction(SIGCHLD, &sa, NULL);
@@ -108,6 +116,12 @@ main(int argc, char ** argv)
     /* } while (read_cnt > 0 && errno != EAGAIN && errno != EWOULDBLOCK); */
 
     while (! do_terminate) {
+
+      if (do_resize) {
+        do_resize = 0;
+        ioctl(STDIN_FILENO, TIOCGWINSZ, (char *)&win);
+        ioctl(slave, TIOCSWINSZ, (char *)&win);
+      }
 
       int ns = poll(fds, 2, -1);
 
