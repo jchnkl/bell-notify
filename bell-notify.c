@@ -118,7 +118,7 @@ main(int argc, char ** argv)
         for (int n = 0; n < 2 && ns > 0; ++n) {
           if (fds[n].revents & POLLIN) {
             --ns;
-            if (n == 0) {
+            if (fds[n].fd == master) {
               int nread = read(master, buf, BUFSIZ);
               write(STDOUT_FILENO, buf, nread);
             } else {
