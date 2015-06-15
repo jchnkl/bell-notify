@@ -172,7 +172,6 @@ main(int argc, char ** argv)
   }
 
   /* close(master); */
-  fprintf(stderr, "\ntcsetattr before kill\n");
   /* tcsetattr(STDIN_FILENO, TCSADRAIN, &tt); */
   /* tcsetattr(STDIN_FILENO, TCSANOW, &tt); */
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &tt);
