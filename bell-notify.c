@@ -21,13 +21,7 @@ sig_terminate(int sig)
   do_terminate = 1;
 }
 
-void wait_for_empty_fd(int fd)
 {
-  struct pollfd fds[] = {
-    { .fd = fd, .events = POLLIN }
-  };
-
-  while (poll(fds, 1, 100) == 1);
 }
 
 int
