@@ -112,7 +112,7 @@ main(int argc, char ** argv)
       int ns = poll(fds, 2, -1);
 
       if (ns < 0) {
-        perror("poll failed\n");
+        continue;
 
       } else {
         for (int n = 0; n < 2 && ns > 0; ++n) {
