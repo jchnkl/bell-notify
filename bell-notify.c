@@ -65,7 +65,6 @@ main(int argc, char ** argv)
   /* ioctl(master, TIOCSCTTY, 0); */
 
   if (my_child_proc < 0) {
-    fprintf(stderr, "could not fork\n");
     return EXIT_FAILURE;
 
   } else if (my_child_proc == 0) {
@@ -85,7 +84,6 @@ main(int argc, char ** argv)
     /* execlp("/bin/sh", "sh", (void*)0); */
     /* execvp(argv[1], NULL); */
 
-    fprintf(stderr, "child exited\n");
 
   } else {
 
