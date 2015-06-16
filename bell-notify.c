@@ -15,6 +15,7 @@
 
 int do_resize = 0;
 int do_terminate = 0;
+pid_t my_child_proc = 0;
 
 void
 sig_resize(int sig)
@@ -23,9 +24,11 @@ sig_resize(int sig)
 }
 
 void
-sig_terminate(int sig)
+sig_terminate(int sig, siginfo_t * siginfo, void * ucontext)
 {
-  do_terminate = 1;
+  if (siginfo->si_pid == my_child_proc) {
+    do_terminate = 1;
+  }
 }
 
 int
@@ -39,7 +42,8 @@ main(int argc, char ** argv)
   sa.sa_handler = sig_resize;
   sigaction(SIGWINCH, &sa, NULL);
 
-  sa.sa_handler = sig_terminate;
+  sa.sa_flags = SA_SIGINFO;
+  sa.sa_sigaction = sig_terminate;
   sigaction(SIGINT, &sa, NULL);
   sigaction(SIGCHLD, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
@@ -56,15 +60,15 @@ main(int argc, char ** argv)
   /* pid_t child = forkpty(&master, NULL, NULL, NULL); */
   openpty(&master, &slave, NULL, &tt, &win);
 
-  pid_t child = fork();
+  my_child_proc = fork();
 
   /* ioctl(master, TIOCSCTTY, 0); */
 
-  if (child < 0) {
+  if (my_child_proc < 0) {
     fprintf(stderr, "could not fork\n");
     return EXIT_FAILURE;
 
-  } else if (child == 0) {
+  } else if (my_child_proc == 0) {
     close(master);
 
     setsid();
