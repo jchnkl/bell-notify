@@ -57,12 +57,9 @@ main(int argc, char ** argv)
   int master;
   int slave;
 
-  /* pid_t child = forkpty(&master, NULL, NULL, NULL); */
   openpty(&master, &slave, NULL, &tt, &win);
 
   my_child_proc = fork();
-
-  /* ioctl(master, TIOCSCTTY, 0); */
 
   if (my_child_proc < 0) {
     return EXIT_FAILURE;
@@ -79,11 +76,7 @@ main(int argc, char ** argv)
 
     close(slave);
 
-    /* execvp(argv[1], NULL); */
     execvp(argv[2], argv + 2);
-    /* execlp("/bin/sh", "sh", (void*)0); */
-    /* execvp(argv[1], NULL); */
-
 
   } else {
 
@@ -103,29 +96,12 @@ main(int argc, char ** argv)
     rtt.c_lflag &= ~ECHO;
     tcsetattr(STDIN_FILENO, TCSANOW, &rtt);
 
-    /* sleep(1); */
-
-    /* int flags = 0; */
-    /* flags = fcntl(master, F_GETFL, 0); */
-    /* fcntl(master, F_SETFL, flags | O_NONBLOCK); */
-
-    /* const char * cmd = "echo hello\n"; */
-    /* write(master, cmd, strlen(cmd)); */
-
-    /* struct termios tios; */
-    /* tcgetattr(master, &tios); */
-    /* tios.c_lflag &= ~(ECHO | ECHONL); */
-    /* tcsetattr(master, TCSAFLUSH, &tios); */
-
     char buf[BUFSIZ];
 
     struct pollfd fds[] =
       { { .fd = master, .events = POLLIN }
       , { .fd = STDIN_FILENO, .events = POLLIN }
       };
-
-
-    /* } while (read_cnt > 0 && errno != EAGAIN && errno != EWOULDBLOCK); */
 
     char * bell_chr = NULL;
 
@@ -165,44 +141,6 @@ main(int argc, char ** argv)
         while (playing);
       }
 
-      /* int nread = read(master, buf, BUFSIZ); */
-      /*  */
-      /* if (nread < 0) { */
-      /*   // try again */
-      /*   continue; */
-      /*  */
-      /* } else { */
-      /*  */
-      /*   char * bell = strchr(buf, 0x7); */
-      /*  */
-      /*   #<{(| if (bell) { |)}># */
-      /*   #<{(|   *bell = 0; |)}># */
-      /*   #<{(|   fprintf(stderr, "BELL\n"); |)}># */
-      /*   #<{(| } |)}># */
-      /*  */
-      /*   #<{(| buf[nread] = '\0'; |)}># */
-      /*   #<{(| fprintf(STDOUT_FILENO, "%s", buf); |)}># */
-      /*   #<{(| fprintf(stderr, "read: \"%s\"\n", buf); |)}># */
-      /*   #<{(| fprintf(stderr, "read\n"); |)}># */
-      /*   #<{(| for (int i = 0; i < nread; i++) { |)}># */
-      /*   #<{(|   putchar(buf[i]); |)}># */
-      /*   #<{(| } |)}># */
-      /*  */
-      /*   write(STDOUT_FILENO, buf, nread); */
-      /*  */
-      /* } */
-      /*  */
-      /* nread = read(STDIN_FILENO, buf, BUFSIZ); */
-      /* write(master, buf, nread); */
-
-      /* if (nread > -1) { */
-      /*   #<{(| buf[nread] = '\0'; |)}># */
-      /*   #<{(| fprintf(stderr, "from stdin: %s", buf); |)}># */
-      /*   write(master, buf, nread); */
-      /* } */
-
-      /* sleep(1); */
-      /* break; */
     }
 
     ca_proplist_destroy(p);
@@ -210,13 +148,9 @@ main(int argc, char ** argv)
 
   }
 
-  /* close(master); */
-  /* tcsetattr(STDIN_FILENO, TCSADRAIN, &tt); */
-  /* tcsetattr(STDIN_FILENO, TCSANOW, &tt); */
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &tt);
 
   kill(0, SIGTERM);
-  /* kill(child, SIGTERM); */
 
   return EXIT_SUCCESS;
 }
