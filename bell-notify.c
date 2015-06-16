@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <pty.h>
 #include <poll.h>
+#include <canberra.h>
 
 int do_resize = 0;
 int do_terminate = 0;
@@ -29,6 +30,12 @@ sig_terminate(int sig, siginfo_t * siginfo, void * ucontext)
   if (siginfo->si_pid == my_child_proc) {
     do_terminate = 1;
   }
+}
+
+void
+ca_callback(ca_context * c, uint32_t id, int error_code, void * playing)
+{
+  *(int *)playing = 0;
 }
 
 int
@@ -81,13 +88,23 @@ main(int argc, char ** argv)
     close(slave);
 
     /* execvp(argv[1], NULL); */
-    execvp(argv[1], argv + 1);
+    execvp(argv[2], argv + 2);
     /* execlp("/bin/sh", "sh", (void*)0); */
     /* execvp(argv[1], NULL); */
 
     fprintf(stderr, "child exited\n");
 
   } else {
+
+    ca_context * ca_ctx;
+    ca_context_create(&ca_ctx);
+
+    ca_proplist * p;
+    ca_proplist_create(&p);
+
+    ca_proplist_sets(p, CA_PROP_EVENT_ID, argv[1]);
+
+    int playing = 1;
 
     struct termios rtt;
     rtt = tt;
@@ -119,6 +136,8 @@ main(int argc, char ** argv)
 
     /* } while (read_cnt > 0 && errno != EAGAIN && errno != EWOULDBLOCK); */
 
+    char * bell_chr = NULL;
+
     while (! do_terminate) {
 
       if (do_resize) {
@@ -139,12 +158,20 @@ main(int argc, char ** argv)
             if (fds[n].fd == master) {
               int nread = read(master, buf, BUFSIZ);
               write(STDOUT_FILENO, buf, nread);
+              bell_chr = memchr(buf, 0x7, nread);
+
             } else {
               int nread = read(STDIN_FILENO, buf, BUFSIZ);
               write(master, buf, nread);
             }
           }
         }
+      }
+
+      if (bell_chr) {
+        bell_chr = NULL;
+        ca_context_play_full(ca_ctx, 1, p, ca_callback, (void *)&playing);
+        while (playing);
       }
 
       /* int nread = read(master, buf, BUFSIZ); */
@@ -186,6 +213,9 @@ main(int argc, char ** argv)
       /* sleep(1); */
       /* break; */
     }
+
+    ca_proplist_destroy(p);
+    ca_context_destroy(ca_ctx);
 
   }
 
